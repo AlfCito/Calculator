@@ -5,7 +5,7 @@ body{
 	background-image: url(https://images.pexels.com/photos/933154/pexels-photo-933154.jpeg?auto=compress&cs=tinysrgb&h=750&w=1260);
 	background-repeat: no-repeat;
 	background-size: cover;
-	background-position: center;
+	background-position: center bottom;
 }
 
 .container{

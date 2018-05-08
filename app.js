@@ -10,159 +10,229 @@ window.onload = function() {
     });
   }
 
-  let numberA = '';
-  let numberB = '';
-  let firstNum = true;
-  let operation = '';
-  let result;
+  let data = {    
+    numberA : [],
+    numberB : [],
+    numberC : [],
+    operation : '',
+    substring : [],
+    result : 0,
+    temp: 0,
+  }
 
+  let state = 'firstNum';
 
-  let getData = (value) => {
-   
-    if( 
-      value !== 'CE' && 
-      value !== 'C' && 
-      value !== 'e' && 
-      value !== '/' && 
-      value !== 'x' && 
-      value !== '+' &&
-      value !== '-' &&
-      value !== '='
-      )
-    { // if user input is a number
+  let updateState = () => {
+    if(data.substring.length === 0){
+      state = 'firstNum';
+    }else if(data.substring.length === 2){
+      state = 'secondNum';
+    }else if(data.substring.length >= 4){
+      state = 'ongoing';
+    }
+  }
 
-      if(firstNum){
-
-        if(numberA !== '0'){
-
-          if(numberA.length < 15){
-
-            /*
-            if(numberA.length === 3){
-              let preStrA = numberA.substring(0, 1);
-              let preStrB = numberA.substring(1, numberA.length);
-              numberA = preStrA + ',' + preStrB;
-
-            }*/
-            numberA += value;
-            
-          }
-          
-        }else{
-          numberA = value;
-        }        
-        screen.innerHTML = numberA;
-
-      }else{
-
-        if(numberB !== '0'){
-          if(numberB.length < 15){
-            numberB += value;
-          }
-        }else{
-          numberB = value;
-        } 
-        screen.innerHTML = numberB;
-
-      }
-
+  let getData = (value) => {   
+    if( value === 'x' || value === '/' || value === '+' || value === '-'){ // if is a mathematical operator
+      operation(value);
     }else if( value === 'CE'){ // else if is CE
-
-      if(!firstNum){
-
-        numberA = '';
-        numberB = '';
-        operation = '';
-        firstNum = true;
-        result = 0;
-        screen.innerHTML = '0';
-        subscreen.innerHTML = '';
-
-      }else{
-
-        numberB = '0';
-        screen.innerHTML = '0';
-      }
-
+      reset();
     }else if(value === 'C'){ // else if is C
-
-      numberA = '';
-      numberB = '';
-      operation = '';
-      firstNum = true;
-      result = 0;
-      screen.innerHTML = '0';
-      subscreen.innerHTML = '';
-
-    }else if ( value === 'e'){ // else if is e for sign change
-
-      let temp = '';
-      if(firstNum){
-
-        if(numberA !== ''){
-          let temp = "-"+ numberA
-          numberA = temp;
-          screen.innerHTML = temp;
-        }
-
-      }else{
-
-        if(numberB !== ''){
-          let temp = "-"+ numberB
-          numberB = temp;
-          screen.innerHTML = temp;
-        }
-      }
-
-    }else if(value === '=' && numberB !== ''){ // else if is iqual
-
+      resetAll();
+    }else if ( value === 's'){ // else if is s for sign change
+      switchSign();
+    }else if(value === '='){ // else if is equal
+      state = 'finish';
       doMath();
+    }else{  // else if user input is a number 
+      createNumber(value);
+    }
+  }
 
-    }else{  // else if is a mathematical operator
+  let switchSign = () => {
 
-      if(numberA === ''){
-        subscreen.innerHTML = '0 '+value;
+    if(state === 'firstNum'){
+      if(data.numberA[0] !== '-'){
+        data.numberA.unshift('-');
       }else{
-        subscreen.innerHTML = numberA + ' ' + value;
+        data.numberA.shift();
+      }      
+    }
+    if(state === 'secondNum'){
+      if(data.numberB[0] !== '-'){
+        data.numberB.unshift('-');
+      }else{
+        data.numberB.shift();
       }
-      operation = value;
-      firstNum = false;
+    }
+    if(state === 'ongoing'){
+      if(data.numberC[0] !== '-'){
+        data.numberC.unshift('-');
+      }else{
+        data.numberC.shift();
+      }
+    }
+    updateDisplay();
+
+  }
+
+  let createNumber = (val) => {
+
+    if(state === 'firstNum'){
+      if(data.numberA.length < 15){
+         data.numberA.push(val);       
+      } 
+    }
+    if(state === 'secondNum'){
+      if(data.numberB.length < 15){
+         data.numberB.push(val);       
+      } 
+    }
+    if(state === 'ongoing'){
+      if(data.numberC.length < 15){
+         data.numberC.push(val);       
+      } 
+    }
+    updateDisplay();
+  }
+
+  let getNum = (num) => {
+    let numArr = data[num].join('');
+    if(numArr === ''){ numArr = '0'};
+    return numArr;
+  }
+
+  let updateDisplay = () => {
+
+    let numA = getNum('numberA');
+    let numB = getNum('numberB');
+    let numC = getNum('numberC');
+    let subscreenD = data.substring.join(' ');
+
+    if(state === 'firstNum'){
+      screen.innerHTML = numA;
+      subscreen.innerHTML = subscreenD;
     }
 
+    if(state === 'secondNum'){
+      screen.innerHTML = numB;
+      subscreen.innerHTML = subscreenD;
+    }
+
+    if(state === 'ongoing'){
+      screen.innerHTML = numC;
+      subscreen.innerHTML = subscreenD;
+    }
+
+    if(state === 'finish'){
+      screen.innerHTML = data.result;
+      subscreen.innerHTML = '';
+      reset();
+    }
+
+    updateState();
+
+  } 
+
+  let operation = (val) => {
+
+    data.operation = val;
+
+    if(state === 'firstNum'){
+      data.substring.push( getNum('numberA'), val );
+    }
+    if(state === 'secondNum'){
+      data.substring.push( getNum('numberB'), val );
+    }
+    if(state === 'ongoing'){
+      data.substring.push( getNum('numberC'), val );
+    }
+    if(state === 'finish'){
+      data.substring.push( getNum('numberA'), val );
+    }
+    doMath();
+    
   }
 
   let doMath = () => {
 
-    subscreen.innerHTML = '';
+    let numA = Number(getNum('numberA'));
+    let numB = Number(getNum('numberB'));
 
-    let numA = Number(numberA);
-    let numB = Number(numberB);
+    if(data.operation === '/'){
 
-    if(operation === '/'){
+      data.result = numA / numB;
 
-      result = numA / numB;
+    }else if(data.operation === 'x'){
 
-    }else if(operation === 'x'){
+      data.result = numA * numB;
 
-      result = numA * numB;
+    }else if(data.operation === '+'){
 
-    }else if(operation === '+'){
+      data.result = numA + numB;
 
-      result = numA + numB;
+    }else if(data.operation === '-'){
 
-    }else if(operation === '-'){
-
-      result = numA - numB;
+      data.result = numA - numB;
 
     }
 
-    numberA = result.toString();
-    numberB = '';
-    operation = '';
-    firstNum = false;
-    screen.innerHTML = result;
+    data.temp = data.result;
+
+    updateDisplay();
 
   }
 
+  let reset = () => { // fore CE
+    if(state === 'firstNum'){
+      resetAll();
+    }
+    if(state === 'secondNum'){
+      resetLast('numberB');
+    } 
+    if(state === 'ongoing'){
+      resetLast('numberC');
+    }
+    if(state === 'finish'){
+      finish();
+    } 
+  }
+
+  let resetAll = () => { // for C
+    data.numberA = [];
+    data.numberB = [];
+    data.numberC = [];
+    data.substring = [];
+    updateState();
+    updateDisplay();
+  }
+
+  let resetLast = (num) => {
+    data[num] = [];
+    updateState();
+    updateDisplay();
+  }
+
+  let finish = () => {
+    data.numberA = [];
+    data.numberA.push(data.result);
+    data.numberB = [];
+    data.numberC = [];
+    data.substring = [];
+    updateState();
+    updateDisplay();
+  }
 
 }
+
+
+
+/*
+TO DO:
+- Star a new number after equal
+- Make a new number after equal if a number is pressed; if an operator is pressed continue ( is working )
+- Make it work with more than two numbers
+- Add comas to the display
+- Check all the functionality
+*/
+
