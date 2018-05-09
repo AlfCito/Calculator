@@ -10,40 +10,24 @@ window.onload = function() {
     });
   }
 
-  let data = {    
-    numberA : [],
-    numberB : [],
-    numberC : [],
-    operation : '',
+  let data = {  
+    currentNumber : '',  
+    previousNumber : '',  
     substring : [],
     result : 0,
-    temp: 0,
+    finished : false,
   }
 
-  let state = 'firstNum';
-
-  let updateState = () => {
-    if(data.substring.length === 0){
-      state = 'firstNum';
-    }else if(data.substring.length === 2){
-      state = 'secondNum';
-    }else if(data.substring.length >= 4){
-      state = 'ongoing';
-    }
-  }
 
   let getData = (value) => {   
-    if( value === 'x' || value === '/' || value === '+' || value === '-'){ // if is a mathematical operator
+    if( value === 'x' || value === '/' || value === '+' || value === '-'|| value === '='){ // if is a mathematical operator
       operation(value);
     }else if( value === 'CE'){ // else if is CE
-      reset();
+      resetLast();
     }else if(value === 'C'){ // else if is C
       resetAll();
     }else if ( value === 's'){ // else if is s for sign change
       switchSign();
-    }else if(value === '='){ // else if is equal
-      state = 'finish';
-      doMath();
     }else{  // else if user input is a number 
       createNumber(value);
     }
@@ -51,177 +35,163 @@ window.onload = function() {
 
   let switchSign = () => {
 
-    if(state === 'firstNum'){
-      if(data.numberA[0] !== '-'){
-        data.numberA.unshift('-');
-      }else{
-        data.numberA.shift();
-      }      
-    }
-    if(state === 'secondNum'){
-      if(data.numberB[0] !== '-'){
-        data.numberB.unshift('-');
-      }else{
-        data.numberB.shift();
-      }
-    }
-    if(state === 'ongoing'){
-      if(data.numberC[0] !== '-'){
-        data.numberC.unshift('-');
-      }else{
-        data.numberC.shift();
-      }
-    }
-    updateDisplay();
+    let temp;
+
+    if(data.currentNumber[0] !== '-'){
+      temp = '-' + data.currentNumber;
+    }else{
+      temp = data.currentNumber.substr(1);
+    }      
+
+    screen.innerHTML = temp
+    data.currentNumber = temp;
 
   }
 
   let createNumber = (val) => {
 
-    if(state === 'firstNum'){
-      if(data.numberA.length < 15){
-         data.numberA.push(val);       
-      } 
+
+    if(data.finished === true){  
+      data.currentNumber = '';  
+      data.finished = false;
     }
-    if(state === 'secondNum'){
-      if(data.numberB.length < 15){
-         data.numberB.push(val);       
-      } 
+
+    if(data.currentNumber.length < 12){
+      data.currentNumber += val;         
     }
-    if(state === 'ongoing'){
-      if(data.numberC.length < 15){
-         data.numberC.push(val);       
-      } 
+
+    screen.innerHTML = data.currentNumber;
+    //screen.innerHTML = formatNumber(data.currentNumber);   
+
+  }
+
+  // Try to implement this function in all the displays, including the subscreen
+  let formatNumber = (num) => {
+
+    let displayNum;
+    let x = num;
+
+    if(data.currentNumber.length > 9){     
+      displayNum = x.slice(0, 3) + "," + x.slice(3, 6) + "," + x.slice(6, 9) + "," + x.slice(9, 14);  
+      return displayNum;   
+    }else if(data.currentNumber.length > 6){   
+      displayNum = x.slice(0, 3) + "," + x.slice(3, 6) + "," + x.slice(6, 9);      
+      return displayNum; 
+    }else if(data.currentNumber.length > 3){  
+      displayNum = x.slice(0, 3) + "," + x.slice(3, 6); 
+      return displayNum;        
+    }else{
+      return x;
     }
-    updateDisplay();
+
   }
 
   let getNum = (num) => {
-    let numArr = data[num].join('');
+    let numArr = data[num];
     if(numArr === ''){ numArr = '0'};
     return numArr;
   }
 
-  let updateDisplay = () => {
-
-    let numA = getNum('numberA');
-    let numB = getNum('numberB');
-    let numC = getNum('numberC');
-    let subscreenD = data.substring.join(' ');
-
-    if(state === 'firstNum'){
-      screen.innerHTML = numA;
-      subscreen.innerHTML = subscreenD;
-    }
-
-    if(state === 'secondNum'){
-      screen.innerHTML = numB;
-      subscreen.innerHTML = subscreenD;
-    }
-
-    if(state === 'ongoing'){
-      screen.innerHTML = numC;
-      subscreen.innerHTML = subscreenD;
-    }
-
-    if(state === 'finish'){
-      screen.innerHTML = data.result;
-      subscreen.innerHTML = '';
-      reset();
-    }
-
-    updateState();
-
-  } 
 
   let operation = (val) => {
 
-    data.operation = val;
+    data.substring.push(getNum('currentNumber'), val);    
+    data.previousNumber = data.currentNumber;
+    data.currentNumber = '';
+    subscreen.innerHTML = data.substring.join(' ');  
 
-    if(state === 'firstNum'){
-      data.substring.push( getNum('numberA'), val );
-    }
-    if(state === 'secondNum'){
-      data.substring.push( getNum('numberB'), val );
-    }
-    if(state === 'ongoing'){
-      data.substring.push( getNum('numberC'), val );
-    }
-    if(state === 'finish'){
-      data.substring.push( getNum('numberA'), val );
-    }
-    doMath();
+    doMath(val);  
     
   }
 
-  let doMath = () => {
+  let doMath = (val) => {
 
-    let numA = Number(getNum('numberA'));
-    let numB = Number(getNum('numberB'));
+    let currentOperation = data.substring[data.substring.length-3];
 
-    if(data.operation === '/'){
+    if(!currentOperation){
+      currentOperation = '+';
+    }
+    
+    let numA = data.result;
+    let numB = Number(getNum('previousNumber'));
+    let myResult;
 
-      data.result = numA / numB;
+    //console.log('numA');
+    //console.log(numA);
+    //console.log('currentOperation');
+    //console.log(currentOperation);
+    //console.log('numB');
+    //console.log(numB);
 
-    }else if(data.operation === 'x'){
+    if(currentOperation === '/'){
 
-      data.result = numA * numB;
+      myResult = numA / numB;
 
-    }else if(data.operation === '+'){
+    }else if(currentOperation === 'x'){
 
-      data.result = numA + numB;
+      myResult = numA * numB;
 
-    }else if(data.operation === '-'){
+    }else if(currentOperation === '+'){
 
-      data.result = numA - numB;
+      myResult = numA + numB;
+
+    }else if(currentOperation === '-'){
+
+      myResult = numA - numB;
 
     }
 
-    data.temp = data.result;
+    data.result = round(myResult, 10);
+    
+    //console.log('result');
+    //console.log(data.result);
 
-    updateDisplay();
+    screen.innerHTML = data.result;
 
-  }
+    //console.log('-----------------------');
 
-  let reset = () => { // fore CE
-    if(state === 'firstNum'){
-      resetAll();
+    if(val === '='){
+      subscreen.innerHTML = '';
+      data.currentNumber = data.result; 
+      data.previousNumber = '';
+      data.substring = [];
+      data.result = 0;
+      data.finished = true;
+
+      //console.log('previousNumber');
+      //console.log(data.previousNumber);
+      //console.log('result');
+      //console.log(data.result);
+      //console.log('substring');
+      //console.log(data.substring);
     }
-    if(state === 'secondNum'){
-      resetLast('numberB');
-    } 
-    if(state === 'ongoing'){
-      resetLast('numberC');
-    }
-    if(state === 'finish'){
-      finish();
-    } 
+
   }
 
   let resetAll = () => { // for C
-    data.numberA = [];
-    data.numberB = [];
-    data.numberC = [];
+
+    data.currentNumber = '';
+    data.previousNumber = '';
     data.substring = [];
-    updateState();
-    updateDisplay();
+    data.result = 0;
+    screen.innerHTML = '0';
+    subscreen.innerHTML = '';
+
   }
 
   let resetLast = (num) => {
-    data[num] = [];
-    updateState();
-    updateDisplay();
+    screen.innerHTML = '0';
+    data.currentNumber = '';
   }
 
-  let finish = () => {
-    data.numberA = [];
-    data.numberA.push(data.result);
-    data.numberB = [];
-    data.numberC = [];
-    data.substring = [];
-    updateState();
-    updateDisplay();
+  function round(number, precision) {
+    var shift = function (number, precision) {
+      var numArray = ("" + number).split("e");
+      return +(numArray[0] + "e" + (numArray[1] ? (+numArray[1] + precision) : precision));
+    };
+    return shift(Math.round(shift(number, +precision)), -precision);
   }
+
 
 }
 
@@ -229,9 +199,8 @@ window.onload = function() {
 
 /*
 TO DO:
-- Star a new number after equal
-- Make a new number after equal if a number is pressed; if an operator is pressed continue ( is working )
-- Make it work with more than two numbers
+- negative empty number returns NaN
+- dont display zero as the first number (s)
 - Add comas to the display
 - Check all the functionality
 */
