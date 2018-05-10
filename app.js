@@ -16,8 +16,25 @@ window.onload = function() {
     substring : [],
     result : 0,
     finished : false,
+    isZero : true,
   }
 
+  let checkZero = () => {
+    //if(screen.innerHTML === '0'){
+    if(
+      data.previousNumber === data.result 
+      || data.previousNumber === '0' 
+      //|| screen.innerHTML === '0' 
+      //|| data.currentNumber === ''
+    ){
+      data.isZero = true;
+      /*if(data.substring.length > 1){
+        data.isZero = false;
+      }*/
+    }else{
+      data.isZero = false;
+    }
+  }
 
   let getData = (value) => {   
     if( value === 'x' || value === '/' || value === '+' || value === '-'|| value === '='){ // if is a mathematical operator
@@ -28,40 +45,55 @@ window.onload = function() {
       resetAll();
     }else if ( value === 's'){ // else if is s for sign change
       switchSign();
-    }else{  // else if user input is a number 
+    }else{  // else if user input is a number or point
       createNumber(value);
     }
   }
 
   let switchSign = () => {
 
-    let temp;
+    if( screen.innerHTML !== '0' ){
 
-    if(data.currentNumber[0] !== '-'){
-      temp = '-' + data.currentNumber;
-    }else{
-      temp = data.currentNumber.substr(1);
-    }      
+      let temp;
 
-    screen.innerHTML = temp
-    data.currentNumber = temp;
+      if(screen.innerHTML[0] !== '-'){
+        temp = '-' + screen.innerHTML;
+      }else{
+        temp = screen.innerHTML.substr(1);
+      }      
+
+      screen.innerHTML = temp
+      data.currentNumber = temp;
+
+    }
 
   }
 
   let createNumber = (val) => {
 
 
-    if(data.finished === true){  
+    if( data.finished === true ){  
       data.currentNumber = '';  
       data.finished = false;
     }
 
-    if(data.currentNumber.length < 12){
-      data.currentNumber += val;         
+    if( data.currentNumber.length < 12 ){
+      if( data.isZero === true  ){
+        data.currentNumber = val;   
+        data.isZero = false;             
+      }else{
+        if( screen.innerHTML !== '0' ){
+          data.currentNumber += val;
+        }else{
+          data.currentNumber = val;
+        }        
+      }
+
     }
 
     screen.innerHTML = data.currentNumber;
-    //screen.innerHTML = formatNumber(data.currentNumber);   
+    checkZero(); 
+    //screen.innerHTML = formatNumber(data.currentNumber);
 
   }
 
@@ -95,13 +127,44 @@ window.onload = function() {
 
   let operation = (val) => {
 
-    data.substring.push(getNum('currentNumber'), val);    
-    data.previousNumber = data.currentNumber;
-    data.currentNumber = '';
-    subscreen.innerHTML = data.substring.join(' ');  
+    console.log('isZero');
+    console.log(data.isZero);
+    console.log('currentNumber');
+    console.log(data.currentNumber);
+    console.log('previousNumber');
+    console.log(data.previousNumber);
+    console.log('result');
+    console.log(data.result);
+    console.log('substring');
+    console.log(data.substring);
+    console.log('-----------------------');
 
-    doMath(val);  
+    if( data.isZero === false ){
+
+      data.substring.push(getNum('currentNumber'), val);   
+      data.previousNumber = data.currentNumber;
+      data.currentNumber = '';
+      subscreen.innerHTML = data.substring.join(' ');   
+      doMath(val);     
+
+    }else{
+
+      if(val === '='){
+        //data.currentNumber === data.previousNumber;
+        doMath(val);
+      }else{
+        data.substring[data.substring.length-1] = val;
+        subscreen.innerHTML = data.substring.join(' '); 
+      }     
+
+    }
+
+    console.log('substring after');
+    console.log(data.substring);
+    console.log('-----------------------');
+
     
+  
   }
 
   let doMath = (val) => {
@@ -166,6 +229,13 @@ window.onload = function() {
       //console.log(data.substring);
     }
 
+    checkZero();
+
+    console.log('******************');
+    console.log('isZero');
+    console.log(data.isZero);
+    console.log('******************');
+
   }
 
   let resetAll = () => { // for C
@@ -200,6 +270,7 @@ window.onload = function() {
 /*
 TO DO:
 - negative empty number returns NaN
+-operations jus when there is a number
 - dont display zero as the first number (s)
 - Add comas to the display
 - Check all the functionality
