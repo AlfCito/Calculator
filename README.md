@@ -1,3 +1,3 @@
 # Calculator
 FreeCodeCamp Calculator
-https://alfcito.github.io/Calculator/.
+https://eddieyepez.github.io/Calculator/.
